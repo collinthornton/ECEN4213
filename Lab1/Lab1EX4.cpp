@@ -1,23 +1,7 @@
-//In this exercise, you will be measuring the analog voltage
-//emitted by the potentiometer and displaying that value
-//on the terminal screen.
-
-//Because the Raspberry Pi lacks an internal ADC, we will use
-//the Adafruit ADS1015 12 Bit ADC.
-
-//The ADS1015 communicates with the Raspberry Pi through
-//I2C communication protocol.
-
-//Complete the given function and use it to measure the
-//voltage emitted by the potentiometer.
-
-//Reference the lab supplement ads1015.pdf and I2CProtocol.pdf
-//for more details on the Adafruit ADS1015 12 Bit converter
-//and I2C protocol.
-
-// single-end, 0-6.144V
-
-//Use g++ -std=c++11 -o Lab1EX4 Lab1EX4.cpp -lwiringPi
+/*
+AUTHORS:	Max DeSantis, Collin Thornton
+EXERCISE:	Lab 1 - EX4
+*/
 
 #include <iostream>
 #include <iomanip>
@@ -32,13 +16,14 @@ using namespace std;
 
 int adcVal(int a);
 
-
 int main(){
-	//Initialize the wiringPi Library.
+	// Initialize the wiringPi Library.
 	wiringPiSetup();
+	
+	// Initialize the wiringPi I2C interface
 	int adc = wiringPiI2CSetup(0x48);
 
-
+	// Loop continously
 	while(true){
 		/*Read value from ADC*/
 		int bitVal = adcVal(adc);
@@ -58,16 +43,17 @@ int main(){
 int adcVal(int adc){
 
 	uint16_t low, high, value;
-	// Refer to the supplemental documents to find the parameters. In this lab, the ADS1015
-	// needs to be set in single-end mode, FSR (full-scale range)is 6.144, you can choose 
-	// any input pin (A0, A1, A2, A3) you like.
+	// Write value of 0x8340 to register 0x01 (Actually using 0x4083, but LSB first)
 	wiringPiI2CWriteReg16(adc, 0x01, 0x8340);
 	usleep(1000);
-    uint16_t data = wiringPiI2CReadReg16(adc, 0x00);
+	
+	// Read value at register 0x00 on ADC
+    	uint16_t data = wiringPiI2CReadReg16(adc, 0x00);
 
-
-    low = (data & 0xFF00) >> 8;
-    high = (data & 0x00FF) << 8;
-    value = (high | low)>>4;
+	// Bit shift read value's bytes (keeping in mind that its transmitted LSB first) to return to usable form
+    	low = (data & 0xFF00) >> 8;
+    	high = (data & 0x00FF) << 8;
+    	value = (high | low)>>4;
+	
 	return value;
 }
