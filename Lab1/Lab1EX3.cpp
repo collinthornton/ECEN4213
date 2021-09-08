@@ -1,13 +1,7 @@
-//In this exercise, you will toggle an LED using a button switch.
-
-//Use the digital I/O pins on the Raspberry Pi to read the state
-//of the switch, and send the corresponding signal to the LED.
-
-//Thoroughly comment your code and demonstrate to the lab instructor.
-
-
-//Use "g++ -std=c++11 -o Lab1EX3 Lab1EX3.cpp -lwiringPi" to compile to code and
-// run the code using "./Lab1EX3"
+/*
+AUTHORS:	Max DeSantis, Collin Thornton
+EXERCISE:	Lab1 - Ex3
+*/
 
 #include <iostream>
 #include <unistd.h>
@@ -25,23 +19,19 @@ int main(){
 	wiringPiSetup();
 
 	/*Set digital pins to be output or input.*/
-	//hints: pinMode(pin, mode);
 	pinMode(LED_PIN, OUTPUT);
 	pinMode(BUTTON_PIN, INPUT);
-
-	bool buttonState = 0;
-
+	
+	// Loop continuously
 	while(true){
-		/*If there is a change in the state of the
-		switch, the state of the LED must also change.*/
-		//hints: digitalRead(pin) ; 
-		//hints: digitalWrite(pin, value); 
-
+		// If the button is pressed, turn the LED on (HIGH)
 		if(digitalRead(BUTTON_PIN))
 			digitalWrite(LED_PIN, HIGH);
+		// If the button is unpressed, turn the LED off (LOW)
 		else
 			digitalWrite(LED_PIN, LOW);
-
+		
+		// Pause briefly between loops
 		sleep(0.1);
 
 	}
