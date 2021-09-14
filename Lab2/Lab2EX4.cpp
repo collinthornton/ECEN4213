@@ -1,3 +1,7 @@
+/*
+Authors:    Max DeSantis, Collin Thornton
+Exercise:   Lab2 EX4
+*/
 // g++ -std=c++14 Lab2EX4.cpp -o Lab2EX4 -lwiringPi
 
 
@@ -6,18 +10,20 @@
 #include <wiringPiI2C.h>
 #include <string.h>
 #include <iostream>
+#include <queue>
 
 using namespace std;
 
 /* Complete the code: I2c address of LCD, some LCD i2c address might be 0x27 */
-int LCDAddr = ;  
+int LCDAddr = 0x27;  // found using 'i2cdetect -y 1'
 
 
 int BLEN = 1; // 1--open backlight.0--close backlight
 int fd; // Linux file descriptor
 int button_state = LOW;
 bool changed = false;
-
+queue<string> msgQ;
+int lastRead = 0;
 
 // Send an 16 bits data to LCD buffer
 void write_word(int data){
@@ -77,21 +83,21 @@ void init(){
     delay(5);
 
     /* Complete the code: 4bit mode 2 Lines & 5*8 dots */
-    send_command();
+    send_command(0x28);
     delay(5);
 
     send_command(0x0C); // Enable display without cursor
     delay(5);
 
     /* Complete the code: Clear screen */
-    send_command(); 
+    send_command(0x01); 
     
 }
 
 // Clear screen
 void clear(){
     /* Complete the code:clear Screen */
-    send_command();
+    send_command(0x01);
 
 }
 
@@ -103,7 +109,7 @@ void write(int x, int y, const char data[]){
     if (y < 0) y = 0; if (y > 1)  y = 1;
 
     /* Complete the code: Target address, Move cursor */
-    addr = ;
+    addr = 0x80 + 0x40 * y + x;
 
     // Set the address
     send_command(addr);
@@ -132,7 +138,19 @@ void print_info()
     printf("Program is running...\n");
     printf("Press Ctrl+C to end the program\n");
 }
-
+void press_button() {
+    if(millis() - lastRead < 100) {
+        return;
+    }
+    if(digitalRead(1)) {
+        // pin is high
+        msgQ.push("Pressed");
+    }
+    else {
+        msgQ.push("NOT PRESSED");
+    }
+    lastRead = millis();
+}
 int main(){
 
     // Set up WiringPi
@@ -154,10 +172,21 @@ int main(){
     It is not recommended to use write() in your wiringPiISR callback function;
     3) Fill the code in function init() , write(), clear()
     */
-
-
+    pinMode(1, INPUT);
+    wiringPiISR(1, INT_EDGE_BOTH, &press_button);
+    write(0, 0, "hello");
+    write(0, 1, "collin");
+    lastRead = millis();
+    auto startTime = millis();
     while(true) {
         /*You can use write() to write to the LCD.  */
+        if(millis() - startTime > 50 && msgQ.size() > 0) {
+            printf("msgQ Size: %d\n", msgQ.size());
+            clear();
+            write(0, 0, msgQ.front().c_str());
+            msgQ.pop();
+            startTime = millis();
+        }
     }
 
     return 0;
