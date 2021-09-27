@@ -138,19 +138,25 @@ void print_info()
     printf("Program is running...\n");
     printf("Press Ctrl+C to end the program\n");
 }
+
+// Button callback function
 void press_button() {
+    // Debouncing
     if(millis() - lastRead < 100) {
         return;
     }
+    
+    // If button was pressed, add "pressed" to queue
     if(digitalRead(1)) {
         // pin is high
         msgQ.push("Pressed");
     }
-    else {
+    else { // Otherwise, add "not pressed" to queue
         msgQ.push("NOT PRESSED");
     }
     lastRead = millis();
 }
+
 int main(){
 
     // Set up WiringPi
@@ -179,9 +185,9 @@ int main(){
     lastRead = millis();
     auto startTime = millis();
     while(true) {
-        /*You can use write() to write to the LCD.  */
+        
+        // If 50ms have passed and there's a message in the queue, clear the LCD and print new message to it.
         if(millis() - startTime > 50 && msgQ.size() > 0) {
-            printf("msgQ Size: %d\n", msgQ.size());
             clear();
             write(0, 0, msgQ.front().c_str());
             msgQ.pop();
