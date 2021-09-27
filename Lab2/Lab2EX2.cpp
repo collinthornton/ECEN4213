@@ -18,6 +18,7 @@ Exercise:   Lab2 EX2
 
 void moveOnePeriod(int dir){
     if(dir == 1){
+        // Provide a alternate pulses to step the motor
         /* clockwise, there are four steps in one period, set a delay after each step*/
         digitalWrite(1,HIGH);
         digitalWrite(4,LOW);
@@ -40,6 +41,7 @@ void moveOnePeriod(int dir){
         digitalWrite(6,HIGH);
     }
     else{
+        // Same as above, but opposite for reverse rotation
         /* anticlockwise, there are four steps in one period, set a delay after each step*/
         digitalWrite(1,LOW);
         digitalWrite(4,LOW);
@@ -72,20 +74,19 @@ void moveCycles(int dir,int cycles){
 }
 
 int main(void){
+    //init
     wiringPiSetup();
-    /* set the pin mode*/
     pinMode(1, OUTPUT);
     pinMode(4, OUTPUT);
     pinMode(5, OUTPUT);
     pinMode(6, OUTPUT);
 
+    // Each loop, rotate back and forth 360 degrees. 512 cycles = 2048 steps = 360 degrees
     while(1){
-        /*rotating 360° clockwise, a total of 2048 steps in one full revolution, namely, 512 cycles.
-        use function moveCycles(int dir,int cycles)*/
+
         delay(500);
         moveCycles(1, 512);
-        /*rotating 360° anticlockwise, a total of 2048 steps in one full revolution, namely, 512 cycles.
-        use function moveCycles(int dir,int cycles)*/
+
         delay(500);
         moveCycles(0, 512);
     }
