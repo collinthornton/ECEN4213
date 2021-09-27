@@ -1,3 +1,7 @@
+/*
+Authors:	Max DeSantis, Collin Thornton
+Exercise:	Lab 2 EX 3
+*/
 
 #include <wiringPi.h>
 #include <stdio.h>
@@ -15,17 +19,20 @@ const int en1 = 3;
 
 int main(void){
     
+	// Init
     wiringPiSetup();
-
-    /*1. set mode for the three pins, the pin mode of the PWM pin should be PWM_OUTPUT*/
     pinMode(pwmPin, PWM_OUTPUT);
     pinMode(en0, OUTPUT);
     pinMode(en1, OUTPUT);
-	/*2. write HIGH or LOW to the two I/O pins to control the rotation direction*/
+	
+	// Set motor direction
     digitalWrite(en0, HIGH);
     digitalWrite(en1, LOW);
-    /*3. use function pwmWrite to control the motor speed. Refer to document pwm.pdf for more information.*/
+    
+	// Set motor speed
     pwmWrite(pwmPin, 1024);
+	
+	//Wait then turn off
     delay(5000);
     pwmWrite(pwmPin, 0);
     return 0;
