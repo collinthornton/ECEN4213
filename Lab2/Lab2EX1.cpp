@@ -21,21 +21,22 @@ void servoWrite(int pin, int angle){
 
 int main(void)
 {
+    // Init
     wiringPiSetup();    
     softPwmCreate(servoPin,  0, 200);
     servoWrite(servoPin, 0);
 
-
+    // Loop indefinitely
     while(1){
+        // Each loop, rotate servo from 0 degrees to 180 degrees
         delay(400);
-
         for(int i = 0; i < 180; i++) {
             servoWrite(servoPin, i);
             delay(10);
         }
-
-        delay(500);
-
+        
+        // Loop servo back to 0 degrees from 180 degrees
+        delay(400);
         for(int i = 180; i > 0; i--) {
             servoWrite(servoPin, i);
             delay(10);
