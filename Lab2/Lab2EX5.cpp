@@ -147,12 +147,16 @@ void print_info()
     printf("Press Ctrl+C to end the program\n");
 }
 
+// Direction button callback
 void set_dir_callback() {
+    
+    // Debouncing
     if(millis() - lastDirChange < 200) {
         return;
     }
-    
     lastDirChange = millis();
+    
+    // If button is pressed, set dirState to its value. Change direction according to dirState.
     if(digitalRead(dirBtn)) {
         printf("DirState: %d\r\n", dirState);
         dirState = !dirState;
@@ -162,14 +166,17 @@ void set_dir_callback() {
 
 }
 
+// Speed button callback
 void speed_callback() {
 
-    
+    // Debouncing
     if(millis() - lastSpeedChange < 100) {
         return;
     }
     lastSpeedChange = millis();
 
+    // If speed button was pressed, increase speed by spdStep. Limit speed to range 200 <= speed <= 1024
+    // spdStep is +20 or -20 depending on if the speed should be increasing or decreasing at that time.
     if(digitalRead(spdBtn)) {
         speed += spdStep;
         if(speed >= 1024) {
@@ -215,17 +222,12 @@ int main(){
 
     while(true) {
         /*According to the global variables, the LCD display and DC motor speed and direction can be controlled*/
-
+        
+        // Set speed and update lcd with speed and direction information. Only update necessary parts to avoid clearing entire screen.
         pwmWrite(pwmPin, speed);
-
         dirState ? write(4, 0, "CW   ") : write(4, 0, "CCW   ");
         sprintf(buf, "%d    ", speed);
         write(7, 1, buf);
-
-        /*
-        delay(max((unsigned int)0,100-(millis()-lastUpdate)));
-        lastUpdate = millis();
-        */
         delay(100);
     }
 
