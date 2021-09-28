@@ -3,7 +3,7 @@ Authors:	Max DeSantis, Collin Thornton
 Exercise:	Lab 3 EX1
 Note:		We built our own class, called SONAR, to handle the sensor readings.
 			It runs in a separate thread (started by sonar.run()) and handles all timings.
-			calling sonar.read() provides the latest value of a running average measurement, improving accuracy.
+			Calling sonar.read() provides the latest value of a running average measurement, improving accuracy.
 */
 
 //Use g++ -std=c++11 -o Lab3EX1 Lab3EX1.cpp sonar.cpp -lwiringPi -lpthread

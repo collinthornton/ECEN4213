@@ -3,7 +3,7 @@ Authors:    Max DeSantis, Collin Thornton
 Exercise:   Lab 3 EX 2
 */
 
-//Use g++ -std=c++11 -o Lab3EX2 Lab3EX2.cpp -lwiringPi
+//Use g++ -std=c++11 -o Lab3EX2 Lab3EX2.cpp sonar.cpp PID.cpp adc.cpp -lwiringPi -lpthread
 
 #include <iostream>
 #include <iomanip>
@@ -19,6 +19,8 @@ Exercise:   Lab 3 EX 2
 #include <cmath>
 
 #include "PID.hpp"
+#include "sonar.hpp"
+#include "adc.hpp"
 
 using namespace std::chrono;
 using namespace std;
@@ -37,8 +39,9 @@ int adc;
 int time_inter_ms = 23; // time interval, you can use different time interval
 
 /*set your pin numbers and pid values*/
-int motor_pin = ;
-int sonar_pin = 1;
+int motorPin = ;
+int sonarPin = 1;
+
 float kp= 11.4; 
 float ki= 0; 
 float kd= 0;
@@ -47,12 +50,16 @@ float kd= 0;
 float distance, setpoint;
 PID::PID pid(kp,ki,kd);
 
+SONAR::SONAR sonar(sonarPin);
 
+// Use adc.readmv()
+ADC::ADC adc(0x48);
 
 
 int main(){
 	wiringPiSetup();
-    adc = wiringPiI2CSetup(0x48);
+    sonar.run();
+    adc.run();
 
     /*Set the pinMode (sonar and fan pins)*/
 
@@ -87,15 +94,17 @@ void sigroutine(int signo){
 
 /* use a sonar sensor to measure the position of the Ping-Pang ball. you may reuse
 your code in EX1.*/
-float read_sonar()
+void read_sonar()
 {
-
+    distance = sonar.read();
 }
 
 /* use a potentiometer to set an objective position (10 - 90 cm) of the Ping-Pang ball, varying the potentiometer
 can change the objective distance. you may reuse your code in Lab 1.*/
-float read_potentionmeter()
+void read_potentionmeter()
 {
-
+    // Probably put this logic in main loop rather than separate function. Store conversion elsewhere.
+    double conversion = 80.0 / 3000.0;
+    setpoint = 10 + adc.readmv()*conversion; //Never go below 10cm.
 }
 

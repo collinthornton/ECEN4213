@@ -31,14 +31,11 @@ double SONAR::read() {
 }
 
 void SONAR::runP() {
-    wiringPiSetup();
 	high_resolution_clock::time_point t1;
 	high_resolution_clock::time_point t2;
 	duration<double> pulse_width;
 
     short sigPin = this->signalPin;
-
-    float runningAverage = 0;
     
     while(!this->stopThread) {
         pinMode(sigPin, OUTPUT);
