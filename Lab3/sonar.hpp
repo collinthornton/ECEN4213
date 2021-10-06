@@ -10,7 +10,7 @@ class SONAR {
         void stop(void);
         void run(void);
         double read(void);
-        float smoothingFactor = 0.05;
+        float smoothingFactor = .6;
         float prevDistance = 0;
     private:
         void runP(void);
@@ -24,8 +24,8 @@ class SONAR {
 
 
 
-        double output = 0;
-        double tMax =  18.5e-3;
+        double output = -20;
+        double tMax =  18.5e3;
 
 };
 

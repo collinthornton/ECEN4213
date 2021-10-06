@@ -7,12 +7,13 @@ class PID {
         double Kp, Ki, Kd;
         double P,I,D;
 
-        PID(double Kp, double Ki, double Kd);
+        PID(double Kp, double Ki, double Kd, double minPeriod);
         int compute(double input, double setpoint);
         void reset();
 
     private:
         double integral, prevError, prevTime;
+        double minPeriod;
 };
 
 #endif //PID

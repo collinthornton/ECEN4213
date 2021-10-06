@@ -1,8 +1,12 @@
 #include "adc.hpp"
 #include <wiringPi.h>
+#include <wiringPiI2C.h>
+#include <unistd.h>
 
 ADC::ADC(int i2cDeviceID) {
     this->adc = wiringPiI2CSetup(i2cDeviceID);
+    wiringPiI2CWriteReg16(adc, 0x01, 0x8340);
+    sleep(.1);
 }
 
 void ADC::run() {
@@ -18,9 +22,9 @@ void ADC::stop() {
 void ADC::runP() {
 
     while(!this->stopThread) {
-        delay(10); //100Hz
+        usleep(500); //
         std::lock_guard<std::mutex> guard(this->m);
-        this->bitVal = this->smoothingFactor*this->readBits + (1.0-this->smoothingFactor)*prevBitVal;
+        this->bitVal = this->smoothingFactor*this->readBits() + (1.0-this->smoothingFactor)*prevBitVal;
         this->prevBitVal = this->bitVal;
     }
 }
@@ -34,10 +38,7 @@ double ADC::readmv() {
 int ADC::readBits() {
 
 	uint16_t low, high, value;
-	// Write value of 0x8340 to register 0x01 (Actually using 0x4083, but LSB first)
-	wiringPiI2CWriteReg16(adc, 0x01, 0x8340);
-	usleep(1000);
-	
+
 	// Read value at register 0x00 on ADC
     uint16_t data = wiringPiI2CReadReg16(this->adc, 0x00);
 
@@ -45,6 +46,5 @@ int ADC::readBits() {
     low = (data & 0xFF00) >> 8;
     high = (data & 0x00FF) << 8;
     value = (high | low)>>4;
-
 	return value;
 }

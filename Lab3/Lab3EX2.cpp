@@ -25,86 +25,48 @@ Exercise:   Lab 3 EX 2
 using namespace std::chrono;
 using namespace std;
 
-// functions
-void sigroutine(int);
-int adcVal();
-float read_potentionmeter();
-float read_sonar();
-
-
-// variables
-float distance_previous_error, distance_error;
-float obj_value, measured_value; // potentionmeter reading, sonar reading
-int adc;
-int time_inter_ms = 23; // time interval, you can use different time interval
 
 /*set your pin numbers and pid values*/
-int motorPin = ;
-int sonarPin = 1;
+int motorPin = 23;
+short sonarPin = 1;
 
-float kp= 11.4; 
-float ki= 0; 
-float kd= 0;
+float kp= 6; 
+float ki= 4; 
+float kd= 3;
 
+float height = 102.0;
+float measuredDistance = 0;
+float setpoint = 0;
+int pwmVal;
 
-float distance, setpoint;
-PID::PID pid(kp,ki,kd);
+double loopRate = 10;
 
-SONAR::SONAR sonar(sonarPin);
+PID pid{kp,ki,kd, loopRate*1e-3};
+SONAR sonar{sonarPin};
 
 // Use adc.readmv()
-ADC::ADC adc(0x48);
+ADC adc{0x48};
 
 
 int main(){
 	wiringPiSetup();
     sonar.run();
     adc.run();
-
-    /*Set the pinMode (sonar and fan pins)*/
-
-    
-    // This part is to set a system timer, the function "sigroutine" will be triggered  
-    // every time_inter_ms milliseconds. 
-    struct itimerval value, ovalue;
-    signal(SIGALRM, sigroutine);
-    value.it_value.tv_sec = 0;
-    value.it_value.tv_usec = time_inter_ms*1000;
-    value.it_interval.tv_sec = 0;
-    value.it_interval.tv_usec = time_inter_ms*1000;
-    setitimer(ITIMER_REAL, &value, &ovalue);    
+    pinMode(motorPin, PWM_OUTPUT);
+    int a = 0;
+    printf("Getting started\n");
+    pwmWrite(motorPin, 0);
 
 	while(true){
-        cout<<"obj_value: "<<obj_value<<" measured_value: "<<measured_value<<endl;
-        cout<<"PID_p: "<<pid.P<<endl;
-        cout<<"PID_i: "<<pid.I<<endl;
-        cout<<"PID_d: "<<pid.D<<endl;
-        cout<<"PID_total: "<< pid.P + pid.I + pid.D << endl;
-        delay(20);
+
+        measuredDistance = sonar.read();
+        setpoint = 10.0 + adc.readmv() * (80.0/5100.0);
+        
+        pwmVal = pid.compute(measuredDistance, setpoint) + 920;
+        //pwmWrite(motorPin, min(1023, max(pwmVal, 0)));
+        pwmWrite(motorPin, pwmVal);
+        printf("Setpoint: %7.3f | Measured: %7.3f | PWM: %5d | loop %5d | P %5.3f | I %5.3f | D %5.3f\n", setpoint, measuredDistance, pwmVal, a, pid.P, pid.I, pid.D);
+        a++;
+        delay(loopRate);
 	}
 }
-
-
-void sigroutine(int signo){
-    pid.compute(distance, setpoint);
-    return;
-}
-
-
-
-/* use a sonar sensor to measure the position of the Ping-Pang ball. you may reuse
-your code in EX1.*/
-void read_sonar()
-{
-    distance = sonar.read();
-}
-
-/* use a potentiometer to set an objective position (10 - 90 cm) of the Ping-Pang ball, varying the potentiometer
-can change the objective distance. you may reuse your code in Lab 1.*/
-void read_potentionmeter()
-{
-    // Probably put this logic in main loop rather than separate function. Store conversion elsewhere.
-    double conversion = 80.0 / 3000.0;
-    setpoint = 10 + adc.readmv()*conversion; //Never go below 10cm.
-}
-

@@ -13,7 +13,6 @@ class ADC {
         double readmv();        // Output reading in mV
         void run();             // Start thread
         void stop();            // Stop thread
-
         int adc;
 
     private:
@@ -23,7 +22,8 @@ class ADC {
         int deviceID;
         int bitVal;
         int prevBitVal;
-        double smoothingFactor = 0.1;
+
+        double smoothingFactor = 1.0;
         
         std::mutex m;
         bool stopThread = false;
