@@ -6,21 +6,21 @@
 
 class SONAR {
     public:
-        SONAR(short signalPin);
-        void stop(void);
-        void run(void);
-        double read(void);
-        float smoothingFactor = .6;
-        float prevDistance = 0;
+        SONAR(short signalPin);         // Initialize sonar class
+        void stop(void);                // Stop thread
+        void run(void);                 // Start thread
+        double read(void);              // Read current estimate
+        float smoothingFactor = .6;     // Adjust aggressiveness of filter.
+        float prevDistance = 0;       
     private:
-        void runP(void);
+        void runP(void);                // Private run function (multithreaded)
         
         short signalPin;
 
-        std::mutex m;
+        std::mutex m;                   // Mutex to protect shared data
 
         bool stopThread = false;
-        std::thread runThread;
+        std::thread runThread;          // Thread to continuously poll distance
 
 
 
