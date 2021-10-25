@@ -1,5 +1,5 @@
 
-//Use g++ joystick.cc -std=c++11 -o Lab4BonusB Lab4BonusB.cpp
+//Use g++ -std=c++11 -o client client.cpp joystick.cc 
 
 
 #include <stdio.h>
@@ -12,61 +12,68 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string>
-//#include "joystick.hh"
+#include "joystick.hh"
 #include <cstdlib>
 #define  PORT 8000
 #define BUFFERSIZE 1024
 using namespace std;
 
 int createSocket();
+bool parseData(int valread, string data);
+
+struct data {
+	float rad;
+	float vel;
+	bool shutdown;
+};
 
 int sock = 0;
+Publisher pub("/dev/kobuki", 115200);
 
 int main(int argc, char const *argv[]){
 	
-	//Open the file stream for the joystick
-	//Joystick joystick("/dev/input/js0");
-	//if(!joystick.isFound()){
-	//	cout << "Error opening joystick" << endl;
-	//	exit(1);
-	//}
-
 
 	//Create the connection to the server
 	createSocket();
+	pub.run();
+	printf("\n\n");
+
+	struct data newData;
 
 	while(true){
 
-		/*Sample the events from the joystick*/
-
-		/*Convert the event to a useable data type so it can be sent*/
-		/*Scale the value to a range the Kobuki can handle
-		No more than 800mm/s*/
-		/*Scale the value of radius to a smaller max value
-		Max radius should be about 1 meter*/
-
-		/*Print the data stream to the terminal*/
-
-		/*Send the data to the server*/
-
         char buffer[BUFFERSIZE] = {0};
         int valread = read(sock, buffer, BUFFERSIZE);
-        cout << buffer << endl;
-        sleep(1);
-
-		//if(/**/) {
-		/*Closes out of all connections cleanly*/
-
-		//When you need to close out of the connection, please
-		//close TTP/IP data streams.
-		//Not doing so will result in the need to restart
-		//the raspberry pi and Kobuki
-		//	close(sock);
-		//	exit(0);
-
-		/*Set a delay*/
+        cout << "valread: " << valread << "| val: " << buffer << endl;
+		newData = parseData(valread, string(buffer));
+		printf("vel: %f | rad: %f | sd: %d\n", newData.vel, newData.rad, newData.shutdown);
+		if(newData.shutdown) break;
+		//pub.move(newData.vel, newData.rad);
+		
 	}
 	return 0;
+}
+
+struct data parseData(int valread, string data) {
+	struct data d;
+	d.vel = 0;
+	d.rad = 0;
+	d.shutdown = 0;
+
+	// Format %f:%f:%d (vel, rad, shutdown)
+	if(valread >= 20) break;
+
+	stringstream data_stream(data);
+	string temp;
+	
+	getline(data_stream, temp, ':');
+	d.vel = stof(temp);
+	getline(data_stream, temp, ':');
+	d.ad = stof(temp);
+	getline(data_stream, temp, ':');
+	d.shutdown = stof(temp);
+
+	return d;
 }
 
 //Creates the connection between the client and
@@ -79,14 +86,14 @@ int createSocket(){
 		printf("\nSocket creation error \n");
 		return -1;
 	}
-
+	
 	memset(&serv_addr, '0', sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port   = htons(PORT);
 
 	/*Use the IP address of the server you are connecting to*/
-	if(inet_pton(AF_INET, "127.0.0.1" , &serv_addr.sin_addr) <= 0){
+	if(inet_pton(AF_INET, "10.227.80.20" , &serv_addr.sin_addr) <= 0){
 		printf("\nInvalid address/ Address not supported \n");
 		return -1;
 	}
