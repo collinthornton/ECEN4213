@@ -9,16 +9,19 @@ using namespace std::chrono;
 
 
 SONAR::SONAR(short signalPin) {
+    // Setup wiringPi. Initialize signal pin as input.
     wiringPiSetup();
     pinMode(signalPin, OUTPUT);
     this->signalPin = signalPin;
 }
 
 void SONAR::run() {
+    // Public function to start thread
     this->runThread = std::thread(&SONAR::runP, this);
 }
 
 void SONAR::stop() {
+    // Public function to kill thread
     this->stopThread = true;
 
     if(this->runThread.joinable())
@@ -26,18 +29,26 @@ void SONAR::stop() {
 }
 
 double SONAR::read() {
+    // Public function to poll current value
+
+    // Data protected with mutex
     std::lock_guard<std::mutex> guard(this->m);
     double output = this->output;
     return output;
 }
 
 void SONAR::runP() {
+    // Private function to continually poll the sonar sensor
+
+    // Use high resolution clocks
 	high_resolution_clock::time_point t1;
 	high_resolution_clock::time_point t2;
     int pulse_width;
 
+    // Make a short name for the signal pin
     short sigPin = this->signalPin;
 
+    // Run continuously until stopped
     while(!this->stopThread) {
         pinMode(sigPin, OUTPUT);
         // Send pulse
@@ -66,7 +77,7 @@ void SONAR::runP() {
         double distance = (17 * pulse_width) / 1000;
  
 
-
+        // Protect data with a mutex and update current estimate
         {
         std::lock_guard<std::mutex> guard(this->m);
         this->output = smoothingFactor*distance + (1.0-smoothingFactor)*this->prevDistance;
