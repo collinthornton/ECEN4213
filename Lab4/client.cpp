@@ -1,5 +1,5 @@
 
-//Use g++ -std=c++11 -o client client.cpp joystick.cc 
+//Use g++ -std=c++11 -o client client.cpp joystick.cc publisher.cpp -lpthread -lwiringPi
 
 
 #include <stdio.h>
@@ -13,13 +13,15 @@
 #include <unistd.h>
 #include <string>
 #include "joystick.hh"
+#include <sstream>
+#include "publisher.hpp"
 #include <cstdlib>
 #define  PORT 8000
 #define BUFFERSIZE 1024
 using namespace std;
 
 int createSocket();
-bool parseData(int valread, string data);
+struct data parseData(int valread, string data);
 
 struct data {
 	float rad;
@@ -44,11 +46,11 @@ int main(int argc, char const *argv[]){
 
         char buffer[BUFFERSIZE] = {0};
         int valread = read(sock, buffer, BUFFERSIZE);
-        cout << "valread: " << valread << "| val: " << buffer << endl;
+        //cout << "valread: " << valread << "| val: " << buffer << endl;
 		newData = parseData(valread, string(buffer));
 		printf("vel: %f | rad: %f | sd: %d\n", newData.vel, newData.rad, newData.shutdown);
 		if(newData.shutdown) break;
-		//pub.move(newData.vel, newData.rad);
+		pub.move(newData.vel, newData.rad);
 		
 	}
 	return 0;
@@ -61,17 +63,16 @@ struct data parseData(int valread, string data) {
 	d.shutdown = 0;
 
 	// Format %f:%f:%d (vel, rad, shutdown)
-	if(valread >= 20) break;
-
+	if(valread < 0) return d;
 	stringstream data_stream(data);
 	string temp;
 	
 	getline(data_stream, temp, ':');
 	d.vel = stof(temp);
 	getline(data_stream, temp, ':');
-	d.ad = stof(temp);
+	d.rad = stof(temp);
 	getline(data_stream, temp, ':');
-	d.shutdown = stof(temp);
+	d.shutdown = (temp == "DIE") ? 1 : 0;
 
 	return d;
 }
