@@ -1,5 +1,5 @@
 
-//Use g++ -std=c++11 -o Lab4BonusA Lab4BonusA.cpp -lwiringPi
+//Use g++ -std=c++11 -o server server.cpp joystick.cc -lwiringPi
 
 #include <iostream>
 #include <iomanip>
