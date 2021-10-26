@@ -65,6 +65,9 @@ int main(){
 
 	bool shutdown = false;
 	bool useDPAD = true;
+
+	int value = static_cast<int>(event.value);
+	int number = static_cast<int>(event.number);
 	
 	while(!shutdown){
 		/*Create a series of commands to interpret the
@@ -79,22 +82,23 @@ int main(){
 		//Select - exit the script and close the Kobuki's connection cleanly		
 		if (joystick.sample(&event))
 		{
-			cout << event << "\t type=" << event.type << " number=" << event.number << " value=" << event.value << endl;
+			value = static_cast<int>(event.value);
+			number = static_cast<int>(event.number);
 
 			if (event.isButton())
 			{
-				//printf("isButton: %u | Value: %d\n", event.number, event.value);
+				//printf("isButton: %u | Value: %d\n", number, event.value);
 				/*Interpret the joystick input and use that input to move the Kobuki*/
-				switch(event.number) {
+				switch(number) {
 					case 8: // LOGITECH
-						if(event.value != 0) {
+						if(value != 0) {
 							printf("\nSHUTTING DOWN\n");
 							shutdown = true;
 						}
 						break;
 
 					case 0: 
-						if(event.value != 0) {
+						if(value != 0) {
 							useDPAD = !useDPAD;
 						}
 						break;
@@ -103,50 +107,54 @@ int main(){
 			}
 			if (event.isAxis())
 			{
-				//printf("isAxis: %u | Value: %d\n", event.number, event.value);
+				//printf("isAxis: %u | Value: %d\n", number, value);
 				/*Interpret the joystick input and use that input to move the Kobuki*/
 
-				switch(event.number) {
+				switch(number) {
 					case 6:	// DPAD left/right
 						if (!useDPAD) break;
 
-						rad = event.value > 0 ? -1 : 1;
-						vel = event.value != 0 ? 3.1415 : 0;
+						rad = value > 0 ? -1 : 1;
+						vel = value != 0 ? 3.1415 : 0;
 						break;
 
 					case 7:	// DPAD up/down
 						if (!useDPAD) break;
 
 						rad = 0;
-						if(event.value == 0) vel = 0;
-						else if(event.value > 0) vel = -500;
+						if(value == 0) vel = 0;
+						else if(value > 0) vel = -500;
 						else vel = 500;
 
 						break;
 
-					case 3:
+					case 2:
 						if(useDPAD) break;
-						if (event.value == 0) rad = 0;
-						else if(event.value == -32767) rad = -1;
-						else if(event.value == 32767) rad = 1;
-						else if(event.value > 0) rad = (500.0-1.0)/32767.0*event.value - 500.0;
-						else if(event.value < 0) rad = (500.0-1.0)/32767.0*event.value + 500.0;
+						if (value == 0) rad = 0;
+						else if(value == -32767) rad = -1;
+						else if(value == 32767) rad = 1;
+						else if(value > 0) rad = (500.0-1.0)/32767.0*value - 500.0;
+						else if(value < 0) rad = (500.0-1.0)/32767.0*value + 500.0;
 						break;
 
-					case 4:
+					case 3:
 						if(useDPAD) break;
 
-						vel = -(float)event.value/32767.0 * 500;
+						vel = -(float)value/32767.0 * 500;
 						break;
 				}
 				
 			}
-		}
-		char buffer[1024] = {0};
+			char buffer[1024] = {0};
 
-		sprintf(buffer, "%f:%f:%d:", vel, rad, shutdown);
-		//cout << buffer << "\tUSE DPAD: " << useDPAD << endl;
-		//cout << "isAxis: " << event.isAxis() << "\tnumber: " << event.number << "\tvalue: " << event.value << "\tvel: " << vel << "\trad: " << rad << endl;
+			string die = shutdown ? "DIE" : "LIVE";
+
+			sprintf(buffer, "%f:%f:%s:", vel, rad, die.c_str());
+			send(new_socket, buffer, strlen(buffer), 0);
+			cout << buffer << " USE DPAD: " << useDPAD << endl;
+			//cout << "isAxis: " << event.isAxis() << "\tnumber: " << number << "\tvalue: " << value << "\tvel: " << vel << "\trad: " << rad << endl;
+		}
+
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
