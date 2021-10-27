@@ -1,3 +1,8 @@
+/*
+Authors:	Max DeSantis, Collin Thornton
+Exercise:	Lab4 EX 2 - Joystick control
+*/
+
 //Use g++ joystick.cc -std=c++11 -o Lab4EX2 Lab4EX2.cpp -lwiringPi
 
 #include <iostream>
@@ -9,6 +14,7 @@
 #include "publisher.hpp"
 using namespace std;
 
+// Publisher abstracts sending of commands to Kobuki
 Publisher pub("/dev/kobuki", 115200);
 
 int main(){
@@ -43,23 +49,12 @@ int main(){
 
 	printf("INITIALIZED JOYSTICK \r\n");
 
-	//The joystick creates events when a button or axis changes value.
-	//Sample event from the joystick: joystick.sample(&event)
-
-	//You can interpret these by sampling the events.
-	//Each event has three parameters.
-	//A type, axis or button,
-	//judge if the event is button: event.isButton()
-	//judge if the event is axis: event.isAxis()
-	//A number corresponding to the axis or button pressed: event.number
-	//And a value, Buttons: 0-unpressed, 1-pressed, Axis: -32767 to 0 to 32767: event.value
-
 	float rad = 0;
 	float vel = 0;
 
 	bool shutdown = false;
 	bool useDPAD = true;
-	
+
 	while(!shutdown){
 		/*Create a series of commands to interpret the
 		joystick input and use that input to move the Kobuki*/
@@ -75,7 +70,6 @@ int main(){
 		{
 			if (event.isButton())
 			{
-				//printf("isButton: %u | Value: %d\n", event.number, event.value);
 				/*Interpret the joystick input and use that input to move the Kobuki*/
 				switch(event.number) {
 					case 8: // LOGITECH
@@ -95,7 +89,6 @@ int main(){
 			}
 			if (event.isAxis())
 			{
-				//printf("isAxis: %u | Value: %d\n", event.number, event.value);
 				/*Interpret the joystick input and use that input to move the Kobuki*/
 
 				switch(event.number) {
@@ -115,7 +108,8 @@ int main(){
 						else vel = 500;
 
 						break;
-
+					
+					// Right analog stick. Linearly maps commands from joystick to velocity and radius, allowing for smooth control. BONUS
 					case 3:
 						if(useDPAD) break;
 						if (event.value == 0) rad = 0;
@@ -134,7 +128,8 @@ int main(){
 				
 			}
 		}
-
+		
+		// Send command every loop.
 		printf("DPAD: %d      MOVE AT (%5.2f mm/s, %5.2f m)\r                        ", useDPAD, vel, rad);
 		pub.move(vel,rad);
 		delay(10);
