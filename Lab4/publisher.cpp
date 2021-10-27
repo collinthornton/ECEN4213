@@ -4,6 +4,7 @@
 #include <thread>
 #include <cmath>
 
+// Creates publisher sending to specified port at rate
 Publisher::Publisher(string serialPort, int baudRate) {
     wiringPiSetup();
     this->serialPort = serialPort;
@@ -12,6 +13,7 @@ Publisher::Publisher(string serialPort, int baudRate) {
     this->stopThread = false;
 }
 
+// Deletes publisher cleanly, closing out of port
 Publisher::~Publisher() {
     this->stopThread = true;
     if(this->runThread.joinable()) {
@@ -19,17 +21,12 @@ Publisher::~Publisher() {
     }
 }
 
+// Starts publisher's separate thread
 void Publisher::run() {
     this->runThread = std::thread(&Publisher::runP, this);
 }
 
-void Publisher::stop() {
-    this->stopThread = true;
-    if(this->runThread.joinable()) {
-        this->runThread.join();
-    }
-}
-
+// Starts publisher's communication (ran by runThread)
 void Publisher::runP() {
     while(!this->stopThread) {
         sendMovement();
@@ -41,6 +38,7 @@ void Publisher::runP() {
     serialClose(this->kobukiId);
 }
 
+// Sends command to Kobuki
 void Publisher::sendMovement() {
     //Create the byte stream packet with the following format:
     unsigned char b_0 = 0xAA; /*Byte 0: Kobuki Header 0*/
@@ -67,6 +65,7 @@ void Publisher::sendMovement() {
 
 }
 
+// Moves a specified distance at a given velocity along given radius.
 void Publisher::moveDist(float distance, float velocity, float radius) {
     int speed;
     if(radius > 1) speed = velocity * (radius + 230 / 2) / radius;
@@ -84,6 +83,7 @@ void Publisher::moveDist(float distance, float velocity, float radius) {
     this->speed = 0;
 }
 
+// Moves at a velocity along a radius directly - will not stop until new command given.
 void Publisher::move(float velocity, float radius) {
     int speed;
     if(radius >= 1) speed = velocity * (radius + 230 / 2) / radius;
@@ -93,6 +93,7 @@ void Publisher::move(float velocity, float radius) {
     this->speed = speed;   
 }
 
+// Rotates given angle theta at given angular velocity omega. (radians)
 void Publisher::rotate(float theta, float omega) {
     int radius;
     if(omega >0) {
