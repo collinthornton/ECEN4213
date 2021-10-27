@@ -12,6 +12,7 @@ Note:
 #include "publisher.hpp"
 using namespace std;
 
+// We use custom publisher class to abstract sending of data to Kobuki. Requires we only use pub.move, pub.rotate etc.
 Publisher pub("/dev/kobuki", 115200);
 
 int main(){
