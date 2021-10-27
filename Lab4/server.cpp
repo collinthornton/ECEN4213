@@ -1,3 +1,8 @@
+/*
+Authors:	Max DeSantis, Collin Thornton
+Exercise:	Server component of Lab4 EX3
+Note:		Ran on side computer with Joystick. Client runs on Pi.
+*/
 
 //Use g++ -std=c++11 -o server server.cpp joystick.cc -lwiringPi
 
@@ -14,8 +19,6 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-//#include <wiringSerial.h>
-//#include <wiringPi.h>
 
 #include "joystick.hh"
 
@@ -32,33 +35,18 @@ int kobuki, new_socket;
 /*Create char buffer to store transmitted data*/
 
 int main(){
-	//Initialize filestream for the Kobuki
-	//wiringPiSetup();
-	//kobuki = serialOpen("/dev/kobuki", 115200);
 
-	//Create connection to client
-
+	// Create joystick
 	Joystick joystick("/dev/input/js0");
 	printf("Joystick found: %d\r\n", joystick.isFound());
 
-
+	// Create connection to client
 	createSocket();
 
 	JoystickEvent event;
 	unsigned int button;
 
 	printf("INITIALIZED JOYSTICK \r\n");
-
-	//The joystick creates events when a button or axis changes value.
-	//Sample event from the joystick: joystick.sample(&event)
-
-	//You can interpret these by sampling the events.
-	//Each event has three parameters.
-	//A type, axis or button,
-	//judge if the event is button: event.isButton()
-	//judge if the event is axis: event.isAxis()
-	//A number corresponding to the axis or button pressed: event.number
-	//And a value, Buttons: 0-unpressed, 1-pressed, Axis: -32767 to 0 to 32767: event.value
 
 	float rad = 0;
 	float vel = 0;
@@ -72,32 +60,25 @@ int main(){
 	while(!shutdown){
 		/*Create a series of commands to interpret the
 		joystick input and use that input to move the Kobuki*/
-
-		//Use the following Key Map:
-		//Up     - move the Kobuki forward
-		//Down   - move the Kobuki backward
-		//Left   - rotate the Kobuki 90 degrees counterclockwise
-		//Right  - rotate the Kobuki 90 degrees clockwise
-		//Start  - immediately stop the Kobuki's movement
-		//Select - exit the script and close the Kobuki's connection cleanly		
+		
+		// On every event, check if it is a button or axis
 		if (joystick.sample(&event))
 		{
 			value = static_cast<int>(event.value);
 			number = static_cast<int>(event.number);
 
+			// If event is a button, check if it was the shutdown button or DPAD enable button
 			if (event.isButton())
 			{
-				//printf("isButton: %u | Value: %d\n", number, event.value);
-				/*Interpret the joystick input and use that input to move the Kobuki*/
 				switch(number) {
-					case 8: // LOGITECH
+					case 8: // LOGITECH. Shutdown Kobuki.
 						if(value != 0) {
 							printf("\nSHUTTING DOWN\n");
 							shutdown = true;
 						}
 						break;
 
-					case 0: 
+					case 0: // Switch between Analog stick and DPAD
 						if(value != 0) {
 							useDPAD = !useDPAD;
 						}
@@ -105,6 +86,7 @@ int main(){
 				}
 
 			}
+			// If event is an axis, determine a radius and velocity from joystick commands.
 			if (event.isAxis())
 			{
 				//printf("isAxis: %u | Value: %d\n", number, value);
@@ -127,7 +109,7 @@ int main(){
 						else vel = 500;
 
 						break;
-
+					// Right analog stick. Takes input and makes a linear mapping allowing for smooth control of forward velocity and rotation. BONUS
 					case 2:
 						if(useDPAD) break;
 						if (value == 0) rad = 0;
@@ -145,6 +127,8 @@ int main(){
 				}
 				
 			}
+			
+			// Assemble message and transmit to client
 			char buffer[1024] = {0};
 
 			string die = shutdown ? "DIE" : "LIVE";
@@ -152,32 +136,10 @@ int main(){
 			sprintf(buffer, "%f:%f:%s:", vel, rad, die.c_str());
 			send(new_socket, buffer, strlen(buffer), 0);
 			cout << buffer << " USE DPAD: " << useDPAD << endl;
-			//cout << "isAxis: " << event.isAxis() << "\tnumber: " << number << "\tvalue: " << value << "\tvel: " << vel << "\trad: " << rad << endl;
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
-}
-
-void movement(int sp, int r){
-	//Create the byte stream packet with the following format:
-	/*Byte 0: Kobuki Header 0*/
-	/*Byte 1: Kobuki Header 1*/
-	/*Byte 2: Length of Payload*/
-	/*Byte 3: Payload Header*/
-	/*Byte 4: Payload Data: Length*/
-	/*Byte 5: Payload Data: Speed(mm/s)*/
-	/*Byte 6: Payload Data: Speed(mm/s)*/
-	/*Byte 7: Payload Data: Radius(mm)*/
-	/*Byte 8: Payload Data: Radius(mm)*/
-	/*Byte 9: Checksum*/
-
-	/*Send the data to the Kobuki over a serial stream*/
-
-	/*Checksum all the data and send that as well*/
-
-	/*Pause the script so the data send rate is the
-	same as the Kobuki receive rate*/
 }
 
 //Creates the connection between the client and
@@ -216,36 +178,4 @@ void createSocket(){
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
-}
-
-void readData(){
-	/*Read the incoming data stream from the controller*/
-
-
-	
-	/*Reset the buffer*/
-	//memset(&/*buffer*/, '0', sizeof(/*buffer*/));
-
-	/*Print the data to the terminal*/
-
-
-	
-
-	/*Use the received data to control the Kobuki*/
-
-	
-	//if() {
-	/*Closes out of all connections cleanly*/
-
-	//When you need to close out of all connections, please
-	//close both the Kobuki and TTP/IP data streams.
-	//Not doing so will result in the need to restart
-	//the raspberry pi and Kobuki
-		close(new_socket);
-		//serialClose(kobuki);
-		exit(0);
-	//}
-
-
-
 }
