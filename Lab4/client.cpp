@@ -1,4 +1,8 @@
-
+/*
+Authors:	Max DeSantis, Collin Thornton
+Exercise:	Client code for Lab3 EX4
+Note:		Client runs on Pi, server runs on separate computer.
+*/
 //Use g++ -std=c++11 -o client client.cpp joystick.cc publisher.cpp -lpthread -lwiringPi
 
 
@@ -23,6 +27,7 @@ using namespace std;
 int createSocket();
 struct data parseData(int valread, string data);
 
+// Hold data transmitted by server
 struct data {
 	float rad;
 	float vel;
@@ -30,6 +35,8 @@ struct data {
 };
 
 int sock = 0;
+
+// Manages commands to Kobuki
 Publisher pub("/dev/kobuki", 115200);
 
 int main(int argc, char const *argv[]){
@@ -41,7 +48,7 @@ int main(int argc, char const *argv[]){
 	printf("\n\n");
 
 	struct data newData;
-
+	// Blocks until new data read. Parses data using parseData function, returning a struct. Struct information passed to pub.move(...), commanding the robot.
 	while(true){
 
         char buffer[BUFFERSIZE] = {0};
@@ -53,9 +60,11 @@ int main(int argc, char const *argv[]){
 		pub.move(newData.vel, newData.rad);
 		
 	}
+	
 	return 0;
 }
 
+// Converts input string to velocity and radius floats, shutdown bool.
 struct data parseData(int valread, string data) {
 	struct data d;
 	d.vel = 0;
