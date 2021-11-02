@@ -28,14 +28,57 @@ void Publisher::run() {
 
 // Starts publisher's communication (ran by runThread)
 void Publisher::runP() {
+    printf("\n\nstarting pub\n");
+    unsigned long startTime;
     while(!this->stopThread) {
+        startTime = millis();
+
         sendMovement();
-        delay(20);
+        readSensors();
+
+        int delayTime = 20 - (millis() - startTime);
+        delay(delayTime);
     }
     this->speed = 0;
     this->radius = 0;
     sendMovement();
     serialClose(this->kobukiId);
+}
+
+// Receives sensor data from Kobuki
+void Publisher::readSensors() {
+
+    // While we can still read data
+    while(serialDataAvail(this->kobukiId) != -1) {
+        int read = serialGetchar(this->kobukiId);
+        if(read == 1) {
+            if(serialGetchar(this->kobukiId) == 15) {
+                
+                // Skip timestamp
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+
+                this->bumpSensor = static_cast<Bumper>(serialGetchar(this->kobukiId));
+                this->wheelSensor = static_cast<WheelDrop>(serialGetchar(this->kobukiId));
+                this->cliffSensor = static_cast<Cliff>(serialGetchar(this->kobukiId));
+
+                // Skip encoders and PWM
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+                serialGetchar(this->kobukiId);
+
+                this->button = static_cast<Button>(serialGetchar(this->kobukiId));
+                return;
+            }
+        }
+    }
+
+
+    
+    return;
 }
 
 // Sends command to Kobuki
