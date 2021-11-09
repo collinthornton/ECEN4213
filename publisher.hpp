@@ -40,7 +40,7 @@ class Publisher {
             BTN2 = 4
         };
 
-        Bumper bumpSensor;
+        Bumper bumperSensor;
         WheelDrop wheelSensor;
         Cliff cliffSensor;
         Button button;

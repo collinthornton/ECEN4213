@@ -50,30 +50,34 @@ void Publisher::readSensors() {
 
     // While we can still read data
     while(serialDataAvail(this->kobukiId) != -1) {
-        int read = serialGetchar(this->kobukiId);
-        if(read == 1) {
-            if(serialGetchar(this->kobukiId) == 15) {
-                
-                // Skip timestamp
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-
-                this->bumpSensor = static_cast<Bumper>(serialGetchar(this->kobukiId));
-                this->wheelSensor = static_cast<WheelDrop>(serialGetchar(this->kobukiId));
-                this->cliffSensor = static_cast<Cliff>(serialGetchar(this->kobukiId));
-
-                // Skip encoders and PWM
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-                serialGetchar(this->kobukiId);
-
-                this->button = static_cast<Button>(serialGetchar(this->kobukiId));
-                return;
+        while(true) {
+            int read = serialGetchar(this->kobukiId);
+            if(read == 1) {
+                if(serialGetchar(this->kobukiId) == 15) {
+                    break;
+                }
             }
         }
+        
+        // Skip timestamp
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+
+        this->bumperSensor = static_cast<Bumper>(serialGetchar(this->kobukiId));
+        this->wheelSensor = static_cast<WheelDrop>(serialGetchar(this->kobukiId));
+        this->cliffSensor = static_cast<Cliff>(serialGetchar(this->kobukiId));
+
+        // Skip encoders and PWM
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+        serialGetchar(this->kobukiId);
+
+        this->button = static_cast<Button>(serialGetchar(this->kobukiId));
+        serialFlush(this->kobukiId);
+        return;
     }
 
 
@@ -117,8 +121,8 @@ void Publisher::moveDist(float distance, float velocity, float radius) {
     this->radius = radius;
     this->speed = speed;
     int start = millis();
-    while(millis() - start <= (distance / velocity) * 1000) {
-        printf("Time: %5.2d/%5.2d\r", millis()-start, (int)(distance/velocity* 1000));
+    while(millis() - start <= (distance / abs(velocity)) * 1000) {
+        printf("Time: %5.2d/%5.2d\r", millis()-start, (int)(distance/abs(velocity)* 1000));
         delay(1);
     }
 
@@ -156,7 +160,7 @@ void Publisher::rotate(float theta, float omega) {
     int start = millis();
     while(millis() - start <= (theta/std::abs(omega))*1000) {
         printf("Time: %5.2d/%5.2d\r", millis()-start, (int)(theta/std::abs(omega)* 1000));
-        delay(1);
+        delay(10);
     }
     this->speed = 0;
     this->radius = 0;

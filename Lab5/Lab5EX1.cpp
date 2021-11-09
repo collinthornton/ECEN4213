@@ -27,7 +27,7 @@ int main(){
 
 	// Every 20ms, print the publisher's sensor readings. If BTN 2 is high, exit.
 	while(true) {
-		printf("Bump: %d | Drop: %d | Cliff: %d | Btn: %d\n", pub.bumpSensor, pub.wheelSensor, pub.cliffSensor, pub.button);
+		printf("Bump: %d | Drop: %d | Cliff: %d | Btn: %d\n", pub.bumperSensor, pub.wheelSensor, pub.cliffSensor, pub.button);
 		if(pub.button == Publisher::BTN1) {
 			break;
 		}
